@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fergus "Herb" McAllister Trading Calculator</title>
+<style>
+:root{--bg:#111713;--panel:#1b241e;--panel2:#222e26;--gold:#d9b56d;--cream:#f4eedf;--muted:#b7c0b3;--line:#3b4a3e;--green:#789b73;--red:#e5a18d}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#26372a 0,#111713 58%);color:var(--cream);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{padding:34px 18px 24px;text-align:center;border-bottom:1px solid var(--line)}
+.kicker{text-transform:uppercase;letter-spacing:.18em;color:var(--gold);font-size:.76rem;font-weight:800}
+h1{margin:8px 0 5px;font-family:Georgia,serif;font-size:clamp(2rem,5vw,3.2rem);line-height:1.1}
+header p{margin:8px auto 0;max-width:700px;color:var(--muted)}
+main{max-width:1100px;margin:26px auto;padding:0 16px 48px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.card{background:rgba(27,36,30,.96);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 12px 32px #0002}
+.card h2{margin:0 0 14px;font-family:Georgia,serif;font-size:1.35rem;color:var(--gold)}
+label{display:block;font-weight:700;font-size:.9rem;margin:13px 0 6px}
+select,input,button{font:inherit}
+select,input{width:100%;background:#101712;color:var(--cream);border:1px solid #536354;border-radius:9px;padding:11px 12px}
+select:focus,input:focus{outline:2px solid var(--gold);outline-offset:1px}
+.small{font-size:.86rem;color:var(--muted)}
+.statrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:15px}
+.stat{flex:1;min-width:120px;padding:12px;background:var(--panel2);border-radius:10px;border:1px solid var(--line)}
+.stat strong{display:block;color:var(--gold);font-size:1.35rem}
+.stat span{color:var(--muted);font-size:.8rem}
+.herb-list{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:8px 12px;align-items:center}
+.herb-list label{margin:0;font-weight:500}
+.herb-list input{padding:8px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+button{border:0;border-radius:9px;padding:11px 15px;font-weight:800;cursor:pointer}
+.primary{background:var(--gold);color:#1a1a12}
+.secondary{background:#344538;color:var(--cream);border:1px solid #536354}
+.result{margin-top:18px;border:1px solid var(--gold);border-radius:14px;padding:18px;background:#1b241e}
+.result h3{margin:0 0 8px;color:var(--gold);font-family:Georgia,serif}
+.result table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{text-align:left;padding:9px 7px;border-bottom:1px solid var(--line)}
+th{color:var(--gold);font-size:.85rem}
+td:last-child,th:last-child{text-align:right}
+.editable-input{min-width:76px;width:100%;padding:7px 8px}.tier-input{min-width:76px;width:100%;padding:7px 8px}.table-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.notice{padding:12px 14px;border-left:3px solid var(--gold);background:#202a22;color:var(--muted);border-radius:5px;margin-top:14px;font-size:.88rem}
+.full{grid-column:1/-1}
+footer{text-align:center;color:var(--muted);font-size:.8rem;padding:0 16px 26px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.card{padding:16px}.herb-list{grid-template-columns:minmax(0,1fr) 78px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">Knox County • Merchant Exchange</div>
+  <h1>Fergus "Herb" McAllister</h1>
+  <p>Scottish Herb Trader &amp; Collector of Fine Weapons</p>
+  <p class="small">Choose the weapon you offer, select the herbs you want, and calculate a fair barter deal in Trade Points (TP).</p>
+</header>
+<main>
+<div class="grid">
+  <section class="card">
+    <h2>1. What are you trading?</h2>
+    <label for="weaponSearchSelect">Search weapons</label>
+    <input id="weaponSearchSelect" type="search" placeholder="Type a weapon name, tier, or type…" autocomplete="off">
+    <label for="weapon">Weapon offered to Fergus</label>
+    <select id="weapon"></select>
+    <p class="small" id="weaponSearchCount" aria-live="polite"></p>
+    <div class="statrow">
+      <div class="stat"><strong id="baseValue">-</strong><span>Base weapon value (TP)</span></div>
+      <div class="stat"><strong id="adjustedValue">-</strong><span>Adjusted offer value (TP)</span></div>
+    </div>
+    <label for="condition">Weapon condition</label>
+    <select id="condition">
+      <option value="1">Pristine - 100%</option>
+      <option value="0.9">Excellent - 90%</option>
+      <option value="0.75">Good - 75%</option>
+      <option value="0.5">Fair - 50%</option>
+      <option value="0.25">Poor - 25%</option>
+      <option value="0">Broken - 0%</option>
+    </select>
+    <label for="craft">Craftsmanship pricing</label>
+    <select id="craft">
+      <option value="0">Included in weapon's listed value</option>
+    </select>
+    <p class="small">Blacksmith-forged weapons remain S+. The Katana is the highest-value weapon (S++). DIY / crafted weapons have been repriced downward. Tools have no trade value (F tier) except crowbars; forged/blacksmith weapons remain S+.</p>
+  </section>
+
+  <section class="card">
+    <h2>2. Which herbs do you want?</h2>
+    <p class="small">Enter the maximum quantity you want for each herb. The calculator will show how many Fergus can offer without exceeding your weapon's adjusted value.</p>
+    <div class="herb-list" id="herbList"></div>
+    <div class="actions">
+      <button class="primary" id="calculate">Calculate trade</button>
+      <button class="secondary" id="clear">Clear quantities</button>
+    </div>
+  </section>
+
+  <section class="card full">
+    <h2>3. Trade result</h2>
+    <div id="result" class="result" aria-live="polite">
+      <h3>Your barter estimate</h3>
+      Select a weapon and the herbs you want, then calculate the trade.
+    </div>
+    <div class="notice"><strong>How it works:</strong> weapon value is the trade budget. The calculator fills your requested herb quantities in the order shown, without exceeding that budget. Change the quantities or reorder your priorities by entering smaller amounts for less important herbs. All prices are custom server roleplay values, not official Project Zomboid prices.</div>
+  </section>
+
+  <section class="card full">
+    <h2>Trade values used</h2>
+    <p class="small">Edit botanical values directly below. Changes are saved in this browser on this device.</p><div class="table-actions"><button class="primary" id="savePrices">Save changes</button><button class="secondary" id="resetPrices">Reset to defaults</button><span class="small" id="saveStatus" aria-live="polite"></span></div>
+    <div style="overflow-x:auto">
+    <table><thead><tr><th>Herb / botanical</th><th>Category</th><th>Value per item</th></tr></thead><tbody id="priceTable"></tbody></table>
+    </div>
+  </section>
+
+  <section class="card full">
+    <h2>Weapon price list</h2>
+    <label for="weaponSearch">Search weapons</label>
+    <input id="weaponSearch" type="search" placeholder="Type a weapon name, tier, or type…">
+    <p class="small">Edit each weapon’s tier and Trade Point value directly in the table. Changes update the calculator and are saved in this browser on this device.</p>
+    <div style="overflow-x:auto">
+      <div class="table-actions"><button class="primary" id="saveWeaponPrices">Save changes</button><button class="secondary" id="resetWeaponPrices">Reset to defaults</button><span class="small" id="weaponSaveStatus" aria-live="polite"></span></div><table><thead><tr><th>Weapon</th><th>Tier (editable)</th><th>Type</th><th>Value (TP, editable)</th></tr></thead><tbody id="weaponPriceTable"></tbody></table>
+    </div>
+  </section>
+</div>
+</main>
+<footer>Fergus "Herb" McAllister • Community barter calculator • Verify game-build and mod compatibility on your server.</footer>
+<script>
+const weapons = [["Machete (Forged)", 195, "S+", "Forged"], ["Sledgehammer (Forged)", 190, "S+", "Forged"], ["Hatchet (Forged)", 185, "S+", "Forged"], ["Pickaxe (Forged)", 185, "S+", "Forged"], ["Wood Axe (Forged)", 185, "S+", "Forged"], ["Crowbar (Forged)", 165, "S+", "Forged"], ["Hand Scythe (Forged)", 163, "S+", "Forged"], ["Meat Cleaver (Forged)", 160, "S+", "Forged"], ["Ball-peen Hammer (Forged)", 155, "S+", "Forged"], ["Barbell (Forged)", 155, "S+", "Forged"], ["Claw Hammer (Forged)", 155, "S+", "Forged"], ["Club Hammer (Forged)", 155, "S+", "Forged"], ["Dumbbell (Forged)", 155, "S+", "Forged"], ["Forged Fork", 155, "S+", "Forged"], ["Forged Spoon", 155, "S+", "Forged"], ["Frying Pan (Forged)", 155, "S+", "Forged"], ["Garden Fork (Forged)", 155, "S+", "Forged"], ["Garden Fork Head (Forged)", 155, "S+", "Forged"], ["Garden Hoe (Forged)", 155, "S+", "Forged"], ["Hunting Knife (Forged)", 155, "S+", "Forged"], ["Kitchen Knife (Forged)", 155, "S+", "Forged"], ["Spade (Forged)", 155, "S+", "Forged"], ["Scrap Metal Shortsword", 90, "A", "DIY / crafted"], ["Scrap Metal Sword", 90, "A", "DIY / crafted"], ["Simple Shortsword", 90, "A", "DIY / crafted"], ["Simple Sword", 90, "A", "DIY / crafted"], ["Katana", 250, "S++", "Standard / uncrafted"], ["Bone War Hatchet", 79, "A", "DIY / crafted"], ["Crude Stone Axe", 79, "A", "DIY / crafted"], ["Jawbone War Axe", 79, "A", "DIY / crafted"], ["Sawblade Axe", 79, "A", "DIY / crafted"], ["Sawblade Hatchet", 79, "A", "DIY / crafted"], ["Scrap Metal Cleaver-Axe", 79, "A", "DIY / crafted"], ["Block Maul", 71, "A", "DIY / crafted"], ["Bucket Maul - Metal Handle", 71, "A", "DIY / crafted"], ["Bucket Maul - Wood Handle", 71, "A", "DIY / crafted"], ["Jawbone Morningstar", 71, "A", "DIY / crafted"], ["Kettle Maul - Metal Handle", 71, "A", "DIY / crafted"], ["Kettle Maul - Wood Handle", 71, "A", "DIY / crafted"], ["Long Stone Mace", 71, "A", "DIY / crafted"], ["Scrap Metal Maul", 71, "A", "DIY / crafted"], ["Scrap Metal Morningstar", 71, "A", "DIY / crafted"], ["Scrap Metal Morningstar - Short", 71, "A", "DIY / crafted"], ["Shortsword", 95, "S", "Standard / uncrafted"], ["Stone Mace", 71, "A", "DIY / crafted"], ["Stone Maul", 71, "A", "DIY / crafted"], ["Sword", 95, "S", "Standard / uncrafted"], ["Machete", 90, "S", "Standard / uncrafted"], ["Machete Blade Knife", 90, "S", "Standard / uncrafted"], ["Sledgehammer", 0, "F", "Standard / uncrafted"], ["Sledgehammer (Red)", 0, "F", "Standard / uncrafted"], ["Stone-Blade Scythe", 62, "B", "DIY / crafted"], ["Axe", 0, "F", "Standard / uncrafted"], ["Firefighter Axe", 0, "F", "Standard / uncrafted"], ["Hand Axe", 0, "F", "Standard / uncrafted"], ["Hatchet", 0, "F", "Standard / uncrafted"], ["Ice Axe", 0, "F", "Standard / uncrafted"], ["Large Stone Axe", 0, "F", "Standard / uncrafted"], ["Pickaxe", 0, "F", "Standard / uncrafted"], ["Scrap Metal Cleaver", 60, "B", "DIY / crafted"], ["Wood Axe", 0, "F", "Standard / uncrafted"], ["Spear with Bone Head", 58, "B", "DIY / crafted"], ["Spear with Fighting Knife", 58, "B", "DIY / crafted"], ["Spear with Glass Head", 58, "B", "DIY / crafted"], ["Spear with Hand Fork", 58, "B", "DIY / crafted"], ["Spear with Hunting Knife", 58, "B", "DIY / crafted"], ["Spear with Kitchen Knife", 58, "B", "DIY / crafted"], ["Spear with Large Knife", 58, "B", "DIY / crafted"], ["Spear with Long Bone Head", 58, "B", "DIY / crafted"], ["Spear with Long Metal Head", 58, "B", "DIY / crafted"], ["Spear with Long Simple Metal Head", 58, "B", "DIY / crafted"], ["Spear with Long Stone Head", 58, "B", "DIY / crafted"], ["Spear with Metal Head", 58, "B", "DIY / crafted"], ["Spear with Plunger", 58, "B", "DIY / crafted"], ["Spear with Scissors", 58, "B", "DIY / crafted"], ["Spear with Scrap Knife", 58, "B", "DIY / crafted"], ["Spear with Screwdriver", 58, "B", "DIY / crafted"], ["Spear with Simple Metal Head", 58, "B", "DIY / crafted"], ["Spear with Small Knife", 58, "B", "DIY / crafted"], ["Spear with Steak Knife", 58, "B", "DIY / crafted"], ["Spear with Stone Head", 58, "B", "DIY / crafted"], ["Wooden Spear", 58, "B", "DIY / crafted"], ["Wooden Spear (Fire Hardened)", 58, "B", "DIY / crafted"], ["Baseball Bat - Can-Reinforced", 55, "B", "DIY / crafted"], ["Baseball Bat - Sheet Metal Reinforced", 55, "B", "DIY / crafted"], ["Baseball Bat with Garden Fork Head", 55, "B", "DIY / crafted"], ["Baseball Bat with Nails", 55, "B", "DIY / crafted"], ["Baseball Bat with Railspike", 55, "B", "DIY / crafted"], ["Baseball Bat with Rake Spikes", 55, "B", "DIY / crafted"], ["Baseball Bat with Sawblade", 55, "B", "DIY / crafted"], ["Baseball Bat with Spikes", 55, "B", "DIY / crafted"], ["Bone Club", 55, "B", "DIY / crafted"], ["Bone Club with Spikes", 55, "B", "DIY / crafted"], ["Cudgel - Sheet Metal Reinforced", 55, "B", "DIY / crafted"], ["Cudgel with Bone Spikes", 55, "B", "DIY / crafted"], ["Cudgel with Brake Disc", 55, "B", "DIY / crafted"], ["Cudgel with Garden Fork Head", 55, "B", "DIY / crafted"], ["Cudgel with Nails", 55, "B", "DIY / crafted"], ["Cudgel with Railspikes", 55, "B", "DIY / crafted"], ["Cudgel with Sawblade", 55, "B", "DIY / crafted"], ["Cudgel with Spade Head", 55, "B", "DIY / crafted"], ["Cudgel with Spikes", 55, "B", "DIY / crafted"], ["Jawbone Club", 55, "B", "DIY / crafted"], ["Long Spiked Club", 55, "B", "DIY / crafted"], ["Metal Baseball Bat with Bolts", 55, "B", "DIY / crafted"], ["Metal Baseball Bat with Sawblade", 55, "B", "DIY / crafted"], ["Short Bat - Can-Reinforced", 55, "B", "DIY / crafted"], ["Short Bat with Nails", 55, "B", "DIY / crafted"], ["Short Bat with Railspike", 55, "B", "DIY / crafted"], ["Short Bat with Rake Spikes", 55, "B", "DIY / crafted"], ["Short Bat with Sawblade", 55, "B", "DIY / crafted"], ["Short Bat with Spikes", 55, "B", "DIY / crafted"], ["Sturdy Bone Club", 55, "B", "DIY / crafted"], ["Sturdy Bone Club with Spikes", 55, "B", "DIY / crafted"], ["Block Mace", 70, "A", "Standard / uncrafted"], ["Engine Parts Maul", 70, "A", "Standard / uncrafted"], ["Long Mace", 70, "A", "Standard / uncrafted"], ["Mace", 70, "A", "Standard / uncrafted"], ["Glass Shiv", 47, "C", "DIY / crafted"], ["Long Simple Metal Knife", 47, "C", "DIY / crafted"], ["Scrap Metal Large Knife", 47, "C", "DIY / crafted"], ["Shiv", 47, "C", "DIY / crafted"], ["Simple Metal Knife", 47, "C", "DIY / crafted"], ["Toothbrush Shiv", 47, "C", "DIY / crafted"], ["Crowbar", 60, "B", "Standard / uncrafted"], ["Garden Fork Scrap Metal Weapon", 45, "C", "DIY / crafted"], ["Rake-Head Scrap Metal Weapon", 45, "C", "DIY / crafted"], ["Spade Head Scrap Metal Weapon", 45, "C", "DIY / crafted"], ["Hand Scythe", 0, "F", "Standard / uncrafted"], ["Meat Cleaver", 0, "F", "Standard / uncrafted"], ["Iron Pipe with Railspike", 40, "C", "DIY / crafted"], ["Baseball Bat", 48, "B", "Standard / uncrafted"], ["Club Hammer", 48, "B", "Standard / uncrafted"], ["Golf Club", 48, "B", "Standard / uncrafted"], ["Jawbone", 48, "B", "Standard / uncrafted"], ["Metal Baseball Bat", 48, "B", "Standard / uncrafted"], ["Short Bat", 48, "B", "Standard / uncrafted"], ["Brake Disc Scrap Metal Weapon", 34, "C", "DIY / crafted"], ["Field Hockey Stick with Nails", 32, "C", "DIY / crafted"], ["Field Hockey Stick with Sawblade", 32, "C", "DIY / crafted"], ["Firewood with Nails", 32, "C", "DIY / crafted"], ["Ice Hockey Stick with Barbed Wire", 32, "C", "DIY / crafted"], ["Large Handle - Can-Reinforced", 32, "C", "DIY / crafted"], ["Large Handle with Brake Disc", 32, "C", "DIY / crafted"], ["Large Handle with Nails", 32, "C", "DIY / crafted"], ["Large Handle with Railspike", 32, "C", "DIY / crafted"], ["Large Handle with Rake Spikes", 32, "C", "DIY / crafted"], ["Large Handle with Sawblade", 32, "C", "DIY / crafted"], ["Makeshift Fishing Rod", 32, "C", "DIY / crafted"], ["Medium Handle - Can-Reinforced", 32, "C", "DIY / crafted"], ["Medium Handle with Nails", 32, "C", "DIY / crafted"], ["Plank with Brake Disc", 32, "C", "DIY / crafted"], ["Plank with Nails", 32, "C", "DIY / crafted"], ["Plank with Saw", 32, "C", "DIY / crafted"], ["Plank with Sawblade", 32, "C", "DIY / crafted"], ["Stake", 32, "C", "DIY / crafted"], ["Tree Branch - Can-Reinforced", 32, "C", "DIY / crafted"], ["Tree Branch with Bone Spikes", 32, "C", "DIY / crafted"], ["Tree Branch with Nails", 32, "C", "DIY / crafted"], ["Tree Branch with Railspike", 32, "C", "DIY / crafted"], ["Wooden Rod - Can-Reinforced", 32, "C", "DIY / crafted"], ["Wooden Rod with Nails", 32, "C", "DIY / crafted"], ["Antique Table Leg with Nails", 30, "C", "DIY / crafted"], ["Antique Table Leg with Sawblade", 30, "C", "DIY / crafted"], ["Chair Leg with Nails", 30, "C", "DIY / crafted"], ["Entrenching Tool", 40, "B", "Standard / uncrafted"], ["Scrap Metal Chopper", 30, "C", "DIY / crafted"], ["Shovel", 0, "F", "Standard / uncrafted"], ["Snow Shovel", 0, "F", "Standard / uncrafted"], ["Spade", 0, "F", "Standard / uncrafted"], ["Wooden Spade", 0, "F", "Standard / uncrafted"], ["Blunt Bone Knife", 38, "C", "Standard / uncrafted"], ["Bread Knife", 38, "C", "Standard / uncrafted"], ["Butter Knife", 38, "C", "Standard / uncrafted"], ["Butterfly Knife", 38, "C", "Standard / uncrafted"], ["Fighting Knife", 38, "C", "Standard / uncrafted"], ["Fillet Knife", 38, "C", "Standard / uncrafted"], ["Gold Butter Knife", 38, "C", "Standard / uncrafted"], ["Handguard Dagger", 38, "C", "Standard / uncrafted"], ["Handiknife", 38, "C", "Standard / uncrafted"], ["Hunting Knife", 38, "C", "Standard / uncrafted"], ["Ice Pick", 38, "C", "Standard / uncrafted"], ["Kitchen Knife", 38, "C", "Standard / uncrafted"], ["Large Knife", 38, "C", "Standard / uncrafted"], ["Long Stone Knife", 38, "C", "Standard / uncrafted"], ["Paring Knife", 38, "C", "Standard / uncrafted"], ["Pocket Knife", 38, "C", "Standard / uncrafted"], ["Railroad Spike Knife", 38, "C", "Standard / uncrafted"], ["Scalpel", 38, "C", "Standard / uncrafted"], ["Silver Butter Knife", 38, "C", "Standard / uncrafted"], ["Small Knife", 38, "C", "Standard / uncrafted"], ["Steak Knife", 38, "C", "Standard / uncrafted"], ["Stone Knife", 38, "C", "Standard / uncrafted"], ["Sushi Knife", 38, "C", "Standard / uncrafted"], ["Bowling Pin with Nails", 28, "D", "DIY / crafted"], ["Broom with Barbed-Wire", 28, "D", "DIY / crafted"], ["Plunger with Barbed Wire", 28, "D", "DIY / crafted"], ["Bone Fork", 0, "F", "Standard / uncrafted"], ["Carving Fork", 0, "F", "Standard / uncrafted"], ["Fork", 0, "F", "Standard / uncrafted"], ["Garden Fork", 0, "F", "Standard / uncrafted"], ["Garden Fork Head", 0, "F", "Standard / uncrafted"], ["Gold Fork", 0, "F", "Standard / uncrafted"], ["Hand Fork", 0, "F", "Standard / uncrafted"], ["Silver Fork", 0, "F", "Standard / uncrafted"], ["Spade Head", 0, "F", "Standard / uncrafted"], ["Ball-peen Hammer", 0, "F", "Standard / uncrafted"], ["Claw Hammer", 0, "F", "Standard / uncrafted"], ["Smithing Hammer", 0, "F", "Standard / uncrafted"], ["Stone Hammer", 0, "F", "Standard / uncrafted"], ["Wooden Mallet", 30, "C", "Standard / uncrafted"], ["Iron Bar", 28, "C", "Standard / uncrafted"], ["Iron Bar Half", 28, "C", "Standard / uncrafted"], ["Iron Pipe", 0, "F", "Standard / uncrafted"], ["Lead Pipe", 0, "F", "Standard / uncrafted"], ["Pipe Wrench", 0, "F", "Standard / uncrafted"], ["Ratchet Wrench", 0, "F", "Standard / uncrafted"], ["Steel Bar", 28, "C", "Standard / uncrafted"], ["Steel Bar Half", 28, "C", "Standard / uncrafted"], ["Steel Rod", 28, "C", "Standard / uncrafted"], ["Steel Rod Half", 28, "C", "Standard / uncrafted"], ["Tire Iron", 28, "C", "Standard / uncrafted"], ["Wrench", 0, "F", "Standard / uncrafted"], ["Animal Bone", 22, "C", "Standard / uncrafted"], ["Large Animal Bone", 22, "C", "Standard / uncrafted"], ["Long Sharp Bone", 22, "C", "Standard / uncrafted"], ["Carpentry Chisel", 20, "C", "Standard / uncrafted"], ["Crude Scissors", 20, "C", "Standard / uncrafted"], ["File", 20, "C", "Standard / uncrafted"], ["Garden Hoe", 0, "F", "Standard / uncrafted"], ["Gardening Trowel", 20, "C", "Standard / uncrafted"], ["Improvised Screwdriver", 0, "F", "Standard / uncrafted"], ["Leaf Rake", 0, "F", "Standard / uncrafted"], ["Mason's Chisel", 20, "C", "Standard / uncrafted"], ["Mason's Trowel", 20, "C", "Standard / uncrafted"], ["Metalworking Chisel", 20, "C", "Standard / uncrafted"], ["Metalworking Punch", 20, "C", "Standard / uncrafted"], ["Rake", 0, "F", "Standard / uncrafted"], ["Scissors", 20, "C", "Standard / uncrafted"], ["Screwdriver", 0, "F", "Standard / uncrafted"], ["Screwdriver (Old)", 0, "F", "Standard / uncrafted"], ["Sheet Metal Snips", 20, "C", "Standard / uncrafted"], ["Debug Yardstick", 18, "C", "Standard / uncrafted"], ["Drumstick", 18, "C", "Standard / uncrafted"], ["Field Hockey Stick", 18, "C", "Standard / uncrafted"], ["Firewood", 18, "C", "Standard / uncrafted"], ["Fishing Rod", 18, "C", "Standard / uncrafted"], ["Fishing Rod without Line", 18, "C", "Standard / uncrafted"], ["Ice Hockey Stick", 18, "C", "Standard / uncrafted"], ["Lacrosse Stick", 18, "C", "Standard / uncrafted"], ["Large Branch", 18, "C", "Standard / uncrafted"], ["Large Handle", 18, "C", "Standard / uncrafted"], ["Long Stick", 18, "C", "Standard / uncrafted"], ["Medium Handle", 18, "C", "Standard / uncrafted"], ["Nightstick", 18, "C", "Standard / uncrafted"], ["Plank", 18, "C", "Standard / uncrafted"], ["Sapling", 18, "C", "Standard / uncrafted"], ["Tree Branch", 18, "C", "Standard / uncrafted"], ["Wooden Rod", 18, "C", "Standard / uncrafted"], ["Antique Table Leg", 15, "C", "Standard / uncrafted"], ["Antique Table Leg - Chained", 15, "C", "Standard / uncrafted"], ["Bolt Cutters", 15, "C", "Standard / uncrafted"], ["Brass Nameplate", 15, "C", "Standard / uncrafted"], ["Chair Leg", 15, "C", "Standard / uncrafted"], ["Fireplace Poker", 15, "C", "Standard / uncrafted"], ["Flint Saw", 0, "F", "Standard / uncrafted"], ["Gaff Hook", 15, "C", "Standard / uncrafted"], ["Hobby Horse", 15, "C", "Standard / uncrafted"], ["Large Hook", 15, "C", "Standard / uncrafted"], ["Multitool", 15, "C", "Standard / uncrafted"], ["Railroad Spike", 15, "C", "Standard / uncrafted"], ["Railroad Spike Puller", 15, "C", "Standard / uncrafted"], ["Railroad Spike Puller (Old)", 15, "C", "Standard / uncrafted"], ["Smashed Bottle", 15, "C", "Standard / uncrafted"], ["Switchblade", 15, "C", "Standard / uncrafted"], ["Acoustic Guitar", 12, "D", "Standard / uncrafted"], ["Badminton Racket", 12, "D", "Standard / uncrafted"], ["Banjo", 12, "D", "Standard / uncrafted"], ["Barbell", 0, "F", "Standard / uncrafted"], ["Bone Spoon", 0, "F", "Standard / uncrafted"], ["Bowling Pin", 12, "D", "Standard / uncrafted"], ["Broom", 12, "D", "Standard / uncrafted"], ["Can Opener - Old-Fashioned", 12, "D", "Standard / uncrafted"], ["Canoe Paddle", 12, "D", "Standard / uncrafted"], ["Canoe Paddle - Double-bladed", 12, "D", "Standard / uncrafted"], ["Dumbbell", 0, "F", "Standard / uncrafted"], ["Electric Bass", 12, "D", "Standard / uncrafted"], ["Electric Guitar", 12, "D", "Standard / uncrafted"], ["Flute", 12, "D", "Standard / uncrafted"], ["Frying Pan", 0, "F", "Standard / uncrafted"], ["Gavel", 12, "D", "Standard / uncrafted"], ["Gold Spoon", 0, "F", "Standard / uncrafted"], ["Griddle Pan", 12, "D", "Standard / uncrafted"], ["Keytar", 12, "D", "Standard / uncrafted"], ["Letter Opener", 12, "D", "Standard / uncrafted"], ["Mop", 12, "D", "Standard / uncrafted"], ["Plunger", 12, "D", "Standard / uncrafted"], ["Pool Cue", 12, "D", "Standard / uncrafted"], ["Rolling Pin", 0, "F", "Standard / uncrafted"], ["Saucepan", 12, "D", "Standard / uncrafted"], ["Saucepan (Copper)", 12, "D", "Standard / uncrafted"], ["Saxophone", 12, "D", "Standard / uncrafted"], ["Silver Spoon", 0, "F", "Standard / uncrafted"], ["Spoon", 0, "F", "Standard / uncrafted"], ["Tennis Racket", 12, "D", "Standard / uncrafted"], ["Trumpet", 12, "D", "Standard / uncrafted"], ["Twig Broom", 12, "D", "Standard / uncrafted"], ["Umbrella (Closed)", 12, "D", "Standard / uncrafted"], ["Violin", 12, "D", "Standard / uncrafted"], ["Broken Acoustic Guitar Neck", 0, "F", "Broken / damaged"], ["Broken Banjo Neck", 0, "F", "Broken / damaged"], ["Broken Baseball Bat", 0, "F", "Broken / damaged"], ["Broken Baseball Bat with Nails", 0, "F", "Broken / damaged"], ["Broken Branch", 0, "F", "Broken / damaged"], ["Broken Branch with Nails", 0, "F", "Broken / damaged"], ["Broken Canoe Paddle", 0, "F", "Broken / damaged"], ["Broken Electric Bass Neck", 0, "F", "Broken / damaged"], ["Broken Electric Guitar Neck", 0, "F", "Broken / damaged"], ["Broken Field Hockey Stick", 0, "F", "Broken / damaged"], ["Broken Field Hockey Stick with Nails", 0, "F", "Broken / damaged"], ["Broken Garden Tool Handle", 0, "F", "Broken / damaged"], ["Broken Iron Pipe", 0, "F", "Broken / damaged"], ["Broken Katana", 0, "F", "Broken / damaged"], ["Broken Large Handle", 0, "F", "Broken / damaged"], ["Broken Large Handle with Nails", 0, "F", "Broken / damaged"], ["Broken Long Stick", 0, "F", "Broken / damaged"], ["Broken Plank", 0, "F", "Broken / damaged"], ["Broken Plank with Nails", 0, "F", "Broken / damaged"], ["Broken Scrap Metal Sword", 0, "F", "Broken / damaged"], ["Broken Simple Sword", 0, "F", "Broken / damaged"], ["Broken Stick", 0, "F", "Broken / damaged"], ["Broken Stick with Nails", 0, "F", "Broken / damaged"], ["Broken Sword", 0, "F", "Broken / damaged"], ["Broken Table Leg", 0, "F", "Broken / damaged"], ["Broken Table Leg with Nails", 0, "F", "Broken / damaged"]];
+const herbs = [
+["Basil (Dried)","Culinary",3,""],
+["Oregano (Dried)","Culinary",3,""],
+["Rosemary (Dried)","Culinary",4,""],
+["Sage (Dried)","Culinary",4,""],
+["Thyme (Dried)","Culinary",4,""],
+["Mint (Dried)","Culinary",4,""],
+["Chives (Dried)","Culinary",3,"Verify game compatibility"],
+["Cilantro (Dried)","Culinary",3,"Verify game compatibility"],
+["Parsley (Dried)","Culinary",3,"Verify game compatibility"],
+["Black Sage (Dried)","Medicinal",8,"Verify dried variant"],
+["Comfrey (Dried)","Medicinal",8,"Verify dried variant"],
+["Common Mallow (Dried)","Medicinal",7,"Verify dried variant"],
+["Plantain (Dried)","Medicinal",8,"Verify dried variant"],
+["Wild Garlic (Dried)","Medicinal / Culinary",9,"Verify dried variant"],
+["Ginseng","Restorative",7,"Verify exact item / dried variant"],
+["Lemongrass","Restorative",5,"Verify exact item / dried variant"],
+["Chamomile (Dried)","Specialty",6,"May require mods / verify"],
+["Lavender (Dried)","Specialty",5,"May require mods / verify"],
+["Marigold (Dried)","Specialty",5,"May require mods / verify"],
+["Rose Petals (Dried)","Specialty",4,"May require mods / verify"],
+["Poppy Pods (Dried)","Specialty",7,"May require mods / verify"],
+["Tobacco (Dried)","Specialty",4,"May require mods / verify"]
+];
+const weaponSelect=document.getElementById('weapon');
+const herbList=document.getElementById('herbList');
+const STORAGE_KEY='fergusHerbTradePricesV2';
+const defaultWeaponPrices=weapons.map(w=>[w[1],w[2]]);
+const defaultHerbPrices=herbs.map(h=>h[2]);
+function loadSavedPrices(){
+ try{
+  const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+  if(saved){
+   if(Array.isArray(saved.weapons))saved.weapons.forEach((v,i)=>{if(weapons[i]&&v){if(Number.isFinite(Number(v.value)))weapons[i][1]=Math.max(0,Number(v.value));if(typeof v.tier==='string'&&v.tier.trim())weapons[i][2]=v.tier.trim()}});
+   if(Array.isArray(saved.herbs))saved.herbs.forEach((v,i)=>{if(herbs[i]&&Number.isFinite(Number(v)))herbs[i][2]=Math.max(0,Number(v))});
+  }
+ }catch(e){console.warn('Could not load saved trade values',e)}
+}
+function savePrices(){
+ try{
+  localStorage.setItem(STORAGE_KEY,JSON.stringify({weapons:weapons.map(w=>({value:w[1],tier:w[2]})),herbs:herbs.map(h=>h[2])}));
+  return true;
+ }catch(e){return false}
+}
+function refreshWeaponSelect(filter=''){
+ const prior=weaponSelect.value;
+ const q=filter.trim().toLowerCase();
+ const matches=weapons.map((w,i)=>({w,i})).filter(({w})=>w.join(' ').toLowerCase().includes(q));
+ weaponSelect.innerHTML='';
+ matches.forEach(({w,i})=>{const o=document.createElement('option');o.value=i;o.textContent=`${w[2]} Tier - ${w[0]} (${w[1]} TP · ${w[3]})`;weaponSelect.appendChild(o)});
+ const stillVisible=matches.some(({i})=>String(i)===prior);
+ if(stillVisible) weaponSelect.value=prior;
+ else if(matches.length) weaponSelect.value=String(matches[0].i);
+ document.getElementById('weaponSearchCount').textContent=q
+   ? `${matches.length} weapon${matches.length===1?'':'s'} found.`
+   : `${weapons.length} weapons available.`;
+ if(!matches.length){
+   const o=document.createElement('option');o.value='';o.textContent='No matching weapons';weaponSelect.appendChild(o);
+ }
+}
+function renderHerbInputs(){
+ herbList.innerHTML='';
+ herbs.forEach((h,i)=>{
+  const lab=document.createElement('label');lab.htmlFor='herb'+i;lab.textContent=`${h[0]} - ${h[2]} TP each`;
+  const inp=document.createElement('input');inp.id='herb'+i;inp.type='number';inp.min='0';inp.step='1';inp.value='0';inp.dataset.index=i;inp.setAttribute('aria-label',`Maximum quantity of ${h[0]}`);
+  herbList.appendChild(lab);herbList.appendChild(inp);
+ });
+}
+function renderHerbPriceTable(){
+ document.getElementById('priceTable').innerHTML=herbs.map((h,i)=>`<tr><td>${h[0]}</td><td>${h[1]}${h[3]?` <span class="small">(${h[3]})</span>`:''}</td><td><input class="editable-input herb-price-edit" type="number" min="0" step="1" value="${h[2]}" data-index="${i}" aria-label="Trade value for ${h[0]} in TP"> TP</td></tr>`).join('');
+ document.querySelectorAll('.herb-price-edit').forEach(inp=>inp.addEventListener('change',()=>{const i=Number(inp.dataset.index);herbs[i][2]=Math.max(0,Number(inp.value)||0);renderHerbInputs();refreshStats();}));
+}
+function renderWeaponTable(filter=''){
+ const q=filter.trim().toLowerCase();
+ const rows=weapons.map((w,i)=>({w,i})).filter(x=>x.w.join(' ').toLowerCase().includes(q));
+ document.getElementById('weaponPriceTable').innerHTML=rows.map(({w,i})=>`<tr><td>${w[0]}</td><td><input class="tier-input weapon-tier-edit" type="text" value="${String(w[2]).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}" data-index="${i}" aria-label="Tier for ${w[0]}"></td><td>${w[3]}</td><td><input class="editable-input weapon-value-edit" type="number" min="0" step="1" value="${w[1]}" data-index="${i}" aria-label="Trade value for ${w[0]} in TP"> TP</td></tr>`).join('');
+ document.querySelectorAll('.weapon-tier-edit').forEach(inp=>inp.addEventListener('change',()=>{const i=Number(inp.dataset.index);weapons[i][2]=inp.value.trim()||'Unranked';refreshWeaponSelect();refreshStats();}));
+ document.querySelectorAll('.weapon-value-edit').forEach(inp=>inp.addEventListener('change',()=>{const i=Number(inp.dataset.index);weapons[i][1]=Math.max(0,Number(inp.value)||0);refreshWeaponSelect();refreshStats();}));
+}
+function rerenderPriceUI(){refreshWeaponSelect(document.getElementById('weaponSearchSelect').value);renderHerbInputs();renderHerbPriceTable();renderWeaponTable(document.getElementById('weaponSearch').value);refreshStats()}
+loadSavedPrices();
+refreshWeaponSelect(document.getElementById('weaponSearchSelect').value);
+renderHerbInputs();
+renderHerbPriceTable();
+document.getElementById('weaponSearch').addEventListener('input',e=>renderWeaponTable(e.target.value));
+document.getElementById('weaponSearchSelect').addEventListener('input',e=>{refreshWeaponSelect(e.target.value);refreshStats()});
+renderWeaponTable();
+document.getElementById('savePrices').addEventListener('click',()=>{const ok=savePrices();document.getElementById('saveStatus').textContent=ok?'Saved in this browser.':'Could not save; browser storage may be disabled.';});
+document.getElementById('saveWeaponPrices').addEventListener('click',()=>{const ok=savePrices();document.getElementById('weaponSaveStatus').textContent=ok?'Saved in this browser.':'Could not save; browser storage may be disabled.';});
+document.getElementById('resetPrices').addEventListener('click',resetAllPrices);
+document.getElementById('resetWeaponPrices').addEventListener('click',resetAllPrices);
+function resetAllPrices(){
+ if(!confirm('Reset all weapon tiers, weapon values, and herb values to the original defaults?'))return;
+ weapons.forEach((w,i)=>{w[1]=defaultWeaponPrices[i][0];w[2]=defaultWeaponPrices[i][1]});
+ herbs.forEach((h,i)=>{h[2]=defaultHerbPrices[i]});
+ localStorage.removeItem(STORAGE_KEY);rerenderPriceUI();
+ document.getElementById('saveStatus').textContent='Defaults restored.';document.getElementById('weaponSaveStatus').textContent='Defaults restored.';
+}
+function values(){
+ const w=weapons[Number(weaponSelect.value)];
+ const base=w[1], cond=Number(document.getElementById('condition').value), craft=0;
+ return {base,adjusted:Math.floor(base*cond*(1+craft)),weapon:w};
+}
+function refreshStats(){const v=values();document.getElementById('baseValue').textContent=v.base+' TP';document.getElementById('adjustedValue').textContent=v.adjusted+' TP'}
+function calculate(){
+ const v=values();let budget=v.adjusted, spent=0, rows=[];
+ const inputs=[...herbList.querySelectorAll('input')];
+ inputs.forEach(inp=>{
+  const h=herbs[Number(inp.dataset.index)];const requested=Math.max(0,Math.floor(Number(inp.value)||0));
+  const qty=Math.min(requested,Math.floor(budget/h[2]));
+  if(qty>0){const cost=qty*h[2];rows.push({name:h[0],requested,qty,price:h[2],cost});budget-=cost;spent+=cost}
+ });
+ const result=document.getElementById('result');
+ if(v.adjusted<=0){result.innerHTML='<h3>No trade available</h3>Your weapon has no trade value at this condition.';return}
+ if(!inputs.some(x=>Number(x.value)>0)){result.innerHTML=`<h3>Your barter estimate</h3><p>You are offering <strong>${v.weapon[0]}</strong> worth <strong>${v.adjusted} TP</strong>. Enter a quantity for at least one herb to calculate the trade.</p>`;return}
+ let html=`<h3>${spent<=v.adjusted?'Trade estimate':'Trade estimate'}</h3><p>Weapon offered: <strong>${v.weapon[0]}</strong> (${v.weapon[2]} tier)</p><div class="statrow"><div class="stat"><strong>${v.adjusted} TP</strong><span>Trade budget</span></div><div class="stat"><strong>${spent} TP</strong><span>Herbs offered</span></div><div class="stat"><strong>${v.adjusted-spent} TP</strong><span>Remaining balance</span></div></div>`;
+ if(rows.length){html+='<table><thead><tr><th>Herb</th><th>Requested</th><th>Trader can give</th><th>Unit value</th><th>Total</th></tr></thead><tbody>'+rows.map(r=>`<tr><td>${r.name}</td><td>${r.requested}</td><td><strong>${r.qty}</strong>${r.qty<r.requested?' <span style="color:var(--red)">(reduced)</span>':''}</td><td>${r.price} TP</td><td>${r.cost} TP</td></tr>`).join('')+'</tbody></table>'}
+ const skipped=inputs.some(inp=>Number(inp.value)>0&&!rows.some(r=>r.name===herbs[Number(inp.dataset.index)][0]));
+ if(skipped)html+='<p class="small">Some requested herbs could not be included because the remaining budget was too low. The calculator processes herbs in the order listed; set lower quantities for lower-priority herbs to control the mix.</p>';
+ html+='<div class="actions"><button class="secondary" onclick="window.print()">Print / Save PDF</button><button class="secondary" id="copyResult">Copy result</button></div>';
+ result.innerHTML=html;
+ document.getElementById('copyResult').addEventListener('click',async()=>{
+  const textOut=`Fergus McAllister trade estimate\nWeapon offered: ${v.weapon[0]}\nTrade budget: ${v.adjusted} TP\n${rows.map(r=>`${r.name}: ${r.qty} x ${r.price} TP = ${r.cost} TP`).join('\n')}\nTotal herbs: ${spent} TP\nRemaining balance: ${v.adjusted-spent} TP`;
+  try{await navigator.clipboard.writeText(textOut);document.getElementById('copyResult').textContent='Copied!'}catch(e){alert(textOut)}
+ });
+}
+weaponSelect.addEventListener('change',refreshStats);
+document.getElementById('condition').addEventListener('change',refreshStats);
+document.getElementById('craft').addEventListener('change',refreshStats);
+document.getElementById('calculate').addEventListener('click',calculate);
+document.getElementById('clear').addEventListener('click',()=>{herbList.querySelectorAll('input').forEach(i=>i.value=0);document.getElementById('result').innerHTML='<h3>Your barter estimate</h3>Choose herbs and calculate the trade.'});
+refreshStats();
+</script>
+</body>
+</html>
